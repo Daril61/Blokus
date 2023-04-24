@@ -1,0 +1,36 @@
+package blokus.utils;
+
+public enum ShapeType {
+    NONE(new int[][]{{}}),
+    A1_1(new int[][]{{0, 0}}),
+    B2_2(new int[][]{{0, 0}, {1, 0}}),
+    C3_1(new int[][]{{-1, 0}, {0, 0}, {1, 0}}),
+    C3_2(new int[][]{{0, 0}, {1, 0}, {1, 1}}),
+    D4_1(new int[][]{{-1, 0}, {0, 0}, {1, 0}, {2, 1}}),
+    D4_2(new int[][]{{-1, 0}, {0, 0}, {1, 0}, {1, -1}}),
+    D4_3(new int[][]{{-1, 0}, {0, 0}, {1, 0}, {0, 1}}),
+    D4_4(new int[][]{{0, 0}, {1, 0}, {0, 1}, {1, 1}}),
+    D4_5(new int[][]{{0, 0}, {0, 1}, {1, 1}, {1, 2}}),
+    E5_1(new int[][]{{0, 0}}),
+    E5_2(new int[][]{{0, 0}}),
+    E5_3(new int[][]{{0, 0}}),
+    E5_4(new int[][]{{0, 0}}),
+    E5_5(new int[][]{{0, 0}}),
+    E5_6(new int[][]{{0, 0}}),
+    E5_7(new int[][]{{0, 0}}),
+    E5_8(new int[][]{{0, 0}}),
+    E5_9(new int[][]{{0, 0}}),
+    E5_10(new int[][]{{0, 0}}),
+    E5_11(new int[][]{{0, 0}}),
+    E5_12(new int[][]{{0, 0}, {0, 0}});
+
+    private final int[][] coordsPixel;
+
+    ShapeType(int[][] coords) {
+        this.coordsPixel = coords;
+    }
+
+    public int[][] getCoordsPixel() {
+        return coordsPixel;
+    }
+}
