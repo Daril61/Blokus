@@ -7,41 +7,45 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-
 <Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="blokus.game.MainMenuController">
    <children>
-      <Group layoutX="240.0" layoutY="124.0">
+      <Group fx:id="mainMenu" layoutX="240.0" layoutY="124.0">
          <children>
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="BLOKUS" textAlignment="CENTER" wrappingWidth="330.936767578125">
                <font>
                   <Font name="DejaVu Sans Bold" size="55.0" />
                </font>
             </Text>
-            <Button layoutX="1.0" layoutY="172.05224609375" mnemonicParsing="false" prefHeight="51.0" prefWidth="331.0" text="Jouer">
+            <Button layoutX="1.0" layoutY="172.05224609375" mnemonicParsing="false" onAction="#PlayButton" prefHeight="51.0" prefWidth="331.0" text="Jouer">
                <font>
                   <Font name="System Bold" size="23.0" />
                </font>
             </Button>
-            <Button layoutY="261.05224609375" mnemonicParsing="false" prefHeight="51.0" prefWidth="331.0" text="Quitter">
+            <Button layoutY="261.05224609375" mnemonicParsing="false" onAction="#QuitButton" prefHeight="51.0" prefWidth="331.0" text="Quitter">
                <font>
                   <Font name="System Bold" size="23.0" />
                </font>
             </Button>
          </children>
       </Group>
-      <Group layoutX="148.0" layoutY="124.0">
+      <Group fx:id="networkMenu" layoutX="148.0" layoutY="124.0">
          <children>
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="MULTIJOUEUR" textAlignment="CENTER" wrappingWidth="515.73681640625">
                <font>
                   <Font name="DejaVu Sans Bold" size="55.0" />
                </font>
             </Text>
-            <Button layoutX="92.0" layoutY="106.0" mnemonicParsing="false" prefHeight="51.0" prefWidth="331.0" text="Héberger">
+            <Button layoutX="92.0" layoutY="106.0" mnemonicParsing="false" onAction="#HostButton" prefHeight="51.0" prefWidth="331.0" text="Héberger">
                <font>
                   <Font name="System Bold" size="23.0" />
                </font>
             </Button>
-            <Button layoutX="302.0" layoutY="235.0" mnemonicParsing="false" prefHeight="51.0" prefWidth="214.0" text="Rejoindre">
+            <Button layoutX="302.0" layoutY="235.0" mnemonicParsing="false" onAction="#JoinButton" prefHeight="51.0" prefWidth="214.0" text="Rejoindre">
+               <font>
+                  <Font name="System Bold" size="23.0" />
+               </font>
+            </Button>
+            <Button layoutX="438.0" layoutY="425.0" mnemonicParsing="false" onAction="#ReturnButton" prefHeight="48.0" prefWidth="214.0" text="Retour">
                <font>
                   <Font name="System Bold" size="23.0" />
                </font>

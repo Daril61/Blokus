@@ -1,10 +1,14 @@
 package blokus.game;
 
+import blokus.utils.NetworkIdentity;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Group;
+import javafx.scene.control.TextField;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -15,6 +19,9 @@ public class MainMenuController implements Initializable {
     @FXML
     private Group networkMenu;
 
+    @FXML
+    private TextField ipField;
+
     /**
      * Fonction execute au lancement de l'application
      * @param url
@@ -22,7 +29,7 @@ public class MainMenuController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        SetupMenu();
+        Platform.runLater(this::SetupMenu);
     }
 
     /**
@@ -42,18 +49,26 @@ public class MainMenuController implements Initializable {
     @FXML
     private void PlayButton() {
         // Désactivation du menu principal
-        mainMenu.setDisable(true);
+        mainMenu.setVisible(false);
 
         // Activation du menu multijoueur
-        networkMenu.setDisable(false);
+        networkMenu.setVisible(true);
+    }
+
+    /**
+     * Fonction qui permet de quitter l'application
+     */
+    @FXML
+    private void QuitButton() {
+        Platform.exit();
     }
 
     /**
      * Fonction pour héberger une partie
      */
     @FXML
-    private void HostButton() {
-
+    private void HostButton() throws IOException {
+        GameApplication.getInstance().ConfigureNetwork(NetworkIdentity.SERVER);
     }
 
     /**
@@ -61,7 +76,8 @@ public class MainMenuController implements Initializable {
      */
     @FXML
     private void JoinButton() {
-
+        // Récupération et sauvegarde de la valeur de l'InputField sur le GameApplication
+        GameApplication.getInstance().ip = ipField.getText();
     }
 
     /**

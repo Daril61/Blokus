@@ -22,6 +22,10 @@ public class GameUtils {
      * @since 15/03/2023
      */
     public static void ChangeScene(Stage stage, FxmlType fxml) throws IOException {
+        System.out.println("ChangeScene");
+        System.out.println(fxml.getFxmlName());
+        System.out.println(fxml.getWindowName());
+
         // Récupération du fxml
         Parent root = FXMLLoader.load(
                 Objects.requireNonNull(

@@ -16,13 +16,18 @@ import java.util.List;
 
 public class GameApplication extends Application {
 
+    private static GameApplication instance;
+
+    public static GameApplication getInstance() {
+        return instance;
+    }
+
     private NetworkIdentity identity;
     public NetworkIdentity GetIdentity() {
         return identity;
     }
 
-    @FXML
-    private TextField ipField;
+    public String ip;
 
     private final List<Socket> connections = new ArrayList<>();
     private boolean gameStart;
@@ -33,14 +38,18 @@ public class GameApplication extends Application {
      * @param stage Fenêtre de l'application
      */
     @Override
-    public void start(Stage stage) {
+    public void start(Stage stage) throws IOException {
+        instance = this;
         this.stage = stage;
 
         System.out.println("test");
+        GameUtils.ChangeScene(stage, FxmlType.MainMenu);
     }
 
     public void ConfigureNetwork(NetworkIdentity identity) throws IOException {
         this.identity = identity;
+
+        System.out.println(identity == NetworkIdentity.SERVER ? "NetworkIdentity.SERVER" : "NetworkIdentity.CLIENT");
 
         GameUtils.ChangeScene(stage, FxmlType.Lobby);
 
@@ -49,20 +58,18 @@ public class GameApplication extends Application {
                 // Si on peut ouvrir une connexion de type serveur
                 try (ServerSocket serverSocket = new ServerSocket(6066)) {
                     // Tant que la partie n'est pas lancée
-                    while (gameStart && connections.size() <= 4) {
+                    while (!gameStart && connections.size() <= 4) {
                         connections.add(serverSocket.accept());
                     }
                 }
             }
             case CLIENT -> {
-                // Récupération de l'ip entré par le joueur
-                String ip = ipField.getText();
-
                 // Si on peut ouvrir une connexion avec le serveur
                 try(Socket socket = new Socket(ip, 6066)) {
                     connections.add(socket);
                 }
             }
         }
+
     }
 }
