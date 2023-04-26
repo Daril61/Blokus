@@ -36,6 +36,8 @@ public class LobbyController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         GameApplication.getInstance().onClientConnectEvent.addListener(this::OnClientConnect);
+
+        System.out.println("Initialisation du controller du lobby");
     }
 
     private void OnClientConnect(EventArgs args) {

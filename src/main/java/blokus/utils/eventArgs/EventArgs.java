@@ -1,6 +1,8 @@
 package blokus.utils.eventArgs;
 
-public abstract class EventArgs {
+import java.io.Serializable;
+
+public abstract class EventArgs implements Serializable {
     public EventArgsType type;
 
     EventArgs(EventArgsType type) {

@@ -10,6 +10,6 @@ public class ReadyMessage extends Message {
 
     @Override
     public MessageType getType() {
-        return MessageType.READY;
+        return MessageType.JOIN;
     }
 }

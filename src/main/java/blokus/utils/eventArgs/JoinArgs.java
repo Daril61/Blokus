@@ -1,14 +1,15 @@
 package blokus.utils.eventArgs;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class JoinArgs extends EventArgs {
 
-    public String pName = "Default Player name";
-    public int pId = 0;
+    public List<JoinStruct> joins = new ArrayList<>();
 
-    public JoinArgs(EventArgsType type, String pName, int pId) {
+    public JoinArgs(EventArgsType type, List<JoinStruct> joins) {
         super(type);
 
-        this.pName = pName;
-        this.pId = pId;
+        this.joins = joins;
     }
 }

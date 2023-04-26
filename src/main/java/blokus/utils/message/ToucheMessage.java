@@ -48,6 +48,6 @@ public class ToucheMessage extends Message {
 
     @Override
     public MessageType getType() {
-        return MessageType.TOUCHE;
+        return MessageType.JOIN;
     }
 }

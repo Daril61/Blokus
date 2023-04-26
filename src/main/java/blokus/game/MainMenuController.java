@@ -75,9 +75,11 @@ public class MainMenuController implements Initializable {
      * Fonction pour rejoindre une partie
      */
     @FXML
-    private void JoinButton() {
+    private void JoinButton() throws IOException {
         // Récupération et sauvegarde de la valeur de l'InputField sur le GameApplication
         GameApplication.getInstance().ip = ipField.getText();
+
+        GameApplication.getInstance().ConfigureNetwork(NetworkIdentity.CLIENT);
     }
 
     /**
