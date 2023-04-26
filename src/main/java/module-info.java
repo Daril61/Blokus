@@ -6,4 +6,5 @@ module blokus.blokus {
 
     exports blokus.game;
     exports blokus.utils;
+    exports blokus.utils.eventArgs;
 }

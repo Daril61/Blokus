@@ -1,8 +1,11 @@
 package blokus.game;
 
+import blokus.utils.Event;
 import blokus.utils.FxmlType;
 import blokus.utils.GameUtils;
 import blokus.utils.NetworkIdentity;
+import blokus.utils.eventArgs.EventArgsType;
+import blokus.utils.eventArgs.JoinArgs;
 import javafx.application.Application;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
@@ -30,8 +33,12 @@ public class GameApplication extends Application {
     public String ip;
 
     private final List<Socket> connections = new ArrayList<>();
+    public int getNumberOfPlayers() { return connections.size(); }
+
     private boolean gameStart;
     private Stage stage;
+
+    public Event onClientConnectEvent;
 
     /**
      * Fonction lancée au démarrage de l'application
@@ -41,6 +48,8 @@ public class GameApplication extends Application {
     public void start(Stage stage) throws IOException {
         instance = this;
         this.stage = stage;
+
+        onClientConnectEvent = new Event(EventArgsType.JOIN);
 
         System.out.println("test");
         GameUtils.ChangeScene(stage, FxmlType.MainMenu);
@@ -60,6 +69,9 @@ public class GameApplication extends Application {
                     // Tant que la partie n'est pas lancée
                     while (!gameStart && connections.size() <= 4) {
                         connections.add(serverSocket.accept());
+
+                        JoinArgs joinArgs = new JoinArgs(EventArgsType.JOIN, "test", getNumberOfPlayers());
+                        onClientConnectEvent.broadcast(joinArgs);
                     }
                 }
             }

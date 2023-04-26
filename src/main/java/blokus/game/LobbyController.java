@@ -1,5 +1,8 @@
 package blokus.game;
 
+import blokus.utils.Event;
+import blokus.utils.eventArgs.EventArgs;
+import blokus.utils.eventArgs.EventArgsType;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Group;
@@ -30,11 +33,12 @@ public class LobbyController implements Initializable {
     @FXML
     private Text networkInfoJ4;
 
-
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-
+        GameApplication.getInstance().onClientConnectEvent.addListener(this::OnClientConnect);
     }
 
+    private void OnClientConnect(EventArgs args) {
 
+    }
 }
