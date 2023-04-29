@@ -1,5 +1,6 @@
 package blokus.utils.eventArgs;
 
 public enum EventArgsType {
-    JOIN
+    UPDATE_CONNECTED,
+    SHAPE_PlACED
 }

@@ -12,6 +12,12 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+/**
+ * Classe qui s'occupe de la gestion de la scène du menu principal
+ *
+ * @author Romain Veydarier
+ * @since 28/04/2023
+ */
 public class MainMenuController implements Initializable {
 
     @FXML

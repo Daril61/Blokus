@@ -7,4 +7,5 @@ module blokus.blokus {
     exports blokus.game;
     exports blokus.utils;
     exports blokus.utils.eventArgs;
+    exports blokus.utils.message;
 }

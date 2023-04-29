@@ -11,7 +11,7 @@ public class Event {
 
     private final Set<Consumer<EventArgs>> listeners = new HashSet<>();
 
-    private EventArgsType type;
+    private final EventArgsType type;
 
     public Event(EventArgsType type) {
         this.type = type;
@@ -22,7 +22,7 @@ public class Event {
     }
 
     public void broadcast(EventArgs args) {
-        if(args.type == type) return;
+        if(args.getType() != type) return;
 
         listeners.forEach(x -> x.accept(args));
     }

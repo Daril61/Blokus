@@ -1,11 +1,9 @@
 package blokus.utils.eventArgs;
 
+import blokus.utils.message.MessageType;
+
 import java.io.Serializable;
 
 public abstract class EventArgs implements Serializable {
-    public EventArgsType type;
-
-    EventArgs(EventArgsType type) {
-        this.type = type;
-    }
+    public abstract EventArgsType getType();
 }

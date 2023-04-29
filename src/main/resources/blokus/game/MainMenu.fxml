@@ -50,7 +50,7 @@
                   <Font name="System Bold" size="23.0" />
                </font>
             </Button>
-            <TextField fx:id="ipField" layoutY="235.0" prefHeight="51.0" prefWidth="303.0" promptText="Ip du serveur">
+            <TextField fx:id="ipField" layoutY="235.0" prefHeight="51.0" prefWidth="303.0" promptText="Ip du serveur" text="localhost">
                <font>
                   <Font size="20.0" />
                </font>

@@ -23,16 +23,6 @@ public class Shape {
             coords.add(new Vector2(coord[0], coord[1]));
         }
     }
-
-    private void SetPosition(Vector2 position) {
-        for(Pixel p : pixels) {
-            p.SetPosition(new Vector2(0, 0));
-        }
-    }
-
-    private void SetPosition(int index, Vector2 pos) {
-        coords.get(index).SetPosition(pos);
-    }
     private int GetX(int index) {
         return coords.get(index).GetX();
     }
@@ -59,7 +49,10 @@ public class Shape {
         return rValue;
     }
 
-    public List<Vector2> GetCoords() {
+    public List<Vector2> getCoords() {
         return coords;
+    }
+    public ShapeType getType() {
+        return type;
     }
 }
