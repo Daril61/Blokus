@@ -9,6 +9,7 @@ import blokus.utils.message.UpdateConnectedMessage;
 import blokus.utils.message.LeaveEventMessage;
 import blokus.utils.message.Message;
 import javafx.application.Application;
+import javafx.scene.SubScene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -129,7 +130,7 @@ public class GameApplication extends Application {
         // Créez une copie de la liste de joinStructs
         UpdateConnectedArgs updateConnectedArgs = new UpdateConnectedArgs(new ArrayList<>(playerStructs));
         // On envoie la liste des joueurs aux joueurs
-        int i = 0;
+        int i = 1;
         for(ObjectOutputStream stream : outputStreams) {
             SendMessage(new UpdateConnectedMessage(updateConnectedArgs, i), stream);
             i++;
@@ -192,7 +193,7 @@ public class GameApplication extends Application {
         // Créez une copie de la liste de joinStructs
         UpdateConnectedArgs updateConnectedArgs = new UpdateConnectedArgs(new ArrayList<>(playerStructs));
         // On envoie la liste des joueurs aux joueurs
-        int i = 0;
+        int i = 1;
         for(ObjectOutputStream stream : outputStreams) {
             SendMessage(new UpdateConnectedMessage(updateConnectedArgs, i), stream);
             i++;
@@ -208,6 +209,13 @@ public class GameApplication extends Application {
      * @param message Message que l'on envoie
      */
     public void SendMessage(Message message) {
+        // Si c'est le serveur qui envoie le message alors il envoie le serveur à chaque personne
+        if(identity == NetworkIdentity.SERVER) {
+            SendMessageToAll(message);
+            return;
+        }
+
+        System.out.println("SendMessage");
         SendMessage(message, outputStreams.get(0));
     }
 

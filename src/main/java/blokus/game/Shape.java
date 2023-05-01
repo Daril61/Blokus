@@ -4,15 +4,11 @@ package blokus.game;
 import blokus.utils.ShapeType;
 import blokus.utils.Vector2;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Shape {
-
-    /**
-     * Liste de pixels de la forme
-     */
-    private final List<Pixel> pixels = new ArrayList<>();
+public class Shape implements Serializable {
 
     private final ShapeType type;
     private final List<Vector2> coords = new ArrayList<>();

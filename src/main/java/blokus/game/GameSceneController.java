@@ -1,9 +1,12 @@
 package blokus.game;
 
+import blokus.utils.GameColor;
+import blokus.utils.NetworkIdentity;
 import blokus.utils.ShapeType;
 import blokus.utils.Vector2;
 import blokus.utils.eventArgs.EventArgs;
 import blokus.utils.eventArgs.ShapePlacedArgs;
+import blokus.utils.message.PlaceShapeMessage;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -13,12 +16,11 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Text;
 
 import java.net.URL;
 import java.util.*;
@@ -39,7 +41,7 @@ public class GameSceneController implements Initializable {
     @FXML
     private GridPane grid;
     @FXML
-    private HBox shapesParent;
+    private FlowPane shapesParent;
 
     @FXML
     private Label leftPlayerName;
@@ -56,17 +58,27 @@ public class GameSceneController implements Initializable {
     @FXML
     private Label rightNbPiece;
 
+    private GameColor pColor;
+
     private final int[][] boardGrid = new int[20][20];
-    private final Map<Integer, Label> playersToNbShapeText = new HashMap<>();
+    private final Map<Integer, Label> playersIdToNbShapeText = new HashMap<>();
+    private final Map<ShapeType, Group> shapesTypeToGroup = new HashMap<>();
+
+    private boolean firstPlace = true;
+    private List<Pixel> pixelPreviewed = new ArrayList<>();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         GameApplication.getInstance().OnShapePlacedEvent.addListener(this::OnShapePlaced);
         currentSelectedShape = new Shape(ShapeType.C3_2);
 
-        Platform.runLater(this::InitializeLater);
-    }
+        pColor = GameColor.values()[GameApplication.getInstance().pId];
 
+        Platform.runLater(() -> {
+            InitializeLater();
+            InitializePlayerShape();
+        });
+    }
     private void InitializeLater() {
         // Récupération de la scène
         Scene scene = root.getScene();
@@ -80,9 +92,15 @@ public class GameSceneController implements Initializable {
         frontNbPiece.setText("" + (ShapeType.values().length-1));
         rightNbPiece.setText("" + (ShapeType.values().length-1));
 
+        InitializeGrid();
+    }
+    private void InitializeGrid() {
         for (int row = 0; row < grid.getRowCount(); row++) {
             for (int col = 0; col < grid.getColumnCount(); col++) {
                 Rectangle cell = new Rectangle(30, 30, Color.WHITE);
+                cell.setStroke(Color.BLACK);
+                cell.setStrokeWidth(2.0);
+
                 cell.setOnMouseEntered(e -> {
                     Node source = e.getPickResult().getIntersectedNode();
                     Integer colIndex = GridPane.getColumnIndex(source);
@@ -93,27 +111,50 @@ public class GameSceneController implements Initializable {
                     // Action à effectuer lorsque la souris entre dans la cellule
 
                     position = new Vector2(colIndex, rowIndex);
-                    cell.setFill(Color.RED);
+                    // TODO Ajout du système de preview
+                    cell.setStrokeWidth(5.0);
                 });
+
                 cell.setOnMouseExited(event -> {
                     // Action à effectuer lorsque la souris quitte la cellule
-                    cell.setFill(Color.WHITE);
+                    // TODO Retire la pièce de preview
+                    cell.setStrokeWidth(2.0);
                 });
 
                 grid.add(cell, col, row);
             }
         }
+
+        // On applique les couleurs au niveau des angles pour le point de départ
+        for(GameColor c : GameColor.values()) {
+            Rectangle rect = (Rectangle) grid.getChildren().stream()
+                    .filter(node -> GridPane.getRowIndex(node) == c.getGridStartPos().GetY() && GridPane.getColumnIndex(node) == c.getGridStartPos().GetX())
+                    .findFirst()
+                    .orElse(null);
+            if(rect == null) continue;
+
+            rect.setFill(c.getColor().deriveColor(0, 1, 1, 0.5));
+        }
     }
+    private void InitializePlayerShape() {
+        // Pour chaque pièce différente dans le jeu
+        for(ShapeType type : ShapeType.values()) {
+            if(type == ShapeType.NONE) continue;
 
-    private void UpdatePlayersName() {
-        List<Label> tempTextList = new ArrayList<>(List.of(leftPlayerName, frontPlayerName, rightPlayerName));
+            Group group = new Group();
 
-        int index = GameApplication.getInstance().pId + 1;
-        for (int i = 0; i < tempTextList.size(); i++) {
-            if(index >= 3) index = 0;
+            for(int[] coord : type.getCoordsPixel()) {
+                Pixel pixel = new Pixel(type, pColor.getColor(), new Vector2(15, 15));
+                pixel.getImg().setLayoutX(coord[0] * 15);
+                pixel.getImg().setLayoutY(coord[1] * 15);
 
-            playersToNbShapeText.put(index, tempTextList.get(i));
-            tempTextList.get(i).setText(GameApplication.getInstance().playerStructs.get(i).pName);
+                pixel.getImg().setOnMousePressed((e) -> OnShapePressed(type));
+                group.getChildren().add(pixel.getImg());
+            }
+
+            shapesTypeToGroup.put(type, group);
+
+            shapesParent.getChildren().add(group);
         }
     }
 
@@ -121,15 +162,31 @@ public class GameSceneController implements Initializable {
         ShapePlacedArgs shapePlacedArgs = (ShapePlacedArgs)args;
 
         UpdatePlayerShapeNumber(shapePlacedArgs.pId);
-        AddShapeToGrid(shapePlacedArgs.color);
+        GameColor color = GameColor.values()[shapePlacedArgs.pId];
+        AddShapeToGrid(shapePlacedArgs.shape, shapePlacedArgs.position, color);
     }
     private void UpdatePlayerShapeNumber(int pId) {
         // Si c'est l'identifiant du joueur alors on ne modifie rien
         if(pId == GameApplication.getInstance().pId) return;
 
         // On récupère l'ancien nombre de pièces que le joueur avait
-        int nbPiece = Integer.parseInt(playersToNbShapeText.get(pId).getText());
-        playersToNbShapeText.get(pId).setText("" + nbPiece);
+        int nbPiece = Integer.parseInt(playersIdToNbShapeText.get(pId).getText());
+        playersIdToNbShapeText.get(pId).setText("" + nbPiece);
+    }
+    private void UpdatePlayersName() {
+        List<Label> tempPlayersNameTextList = new ArrayList<>(List.of(leftPlayerName, frontPlayerName, rightPlayerName));
+        List<Label> tempNbPieceTextList = new ArrayList<>(List.of(leftNbPiece, frontNbPiece, rightNbPiece));
+
+        int index = GameApplication.getInstance().pId + 1;
+        System.out.println("Pid : " + GameApplication.getInstance().pId);
+        for (int i = 0; i < tempPlayersNameTextList.size(); i++) {
+            if(index > 3) index = 0;
+
+            System.out.println("Index : " + index);
+            playersIdToNbShapeText.put(index, tempNbPieceTextList.get(i));
+            tempPlayersNameTextList.get(i).setText(GameApplication.getInstance().playerStructs.get(i).pName);
+            index++;
+        }
     }
 
     private void OnKeyPressed(KeyEvent event) {
@@ -138,17 +195,139 @@ public class GameSceneController implements Initializable {
         }
 
         if(event.getCode() == KeyCode.P) {
-            AddShapeToGrid(Color.RED);
+            PlaceShape();
         }
     }
+    private void OnShapePressed(ShapeType type) {
+        currentSelectedShape = new Shape(type);
+    }
 
-    public void AddShapeToGrid(Color color) {
+    /**
+     * Fonction qui permet de savoir si on peut poser la pièce
+     * @return Vrai (true) si on peut poser la pièce, Faux (false) si on ne peut pas
+     */
+    private boolean CheckIfCanPlace() {
+        boolean canBePlaced = false;
+
+        // On regarde s'il n'y a pas un bloc sur les cases de notre futur forme
         for(Vector2 coord : currentSelectedShape.getCoords()) {
             int x = position.GetX() + coord.GetX();
             int y = position.GetY() + coord.GetY();
+
+            // Si les coordonnés sont en dehors de la grille
+            if(x < 0 || x >= boardGrid.length) return false;
+            if(y < 0 || y >= boardGrid[0].length) return false;
+
+            // Si c'est le premier placement alors on regarde si le pixel est dans l'angle
+            if(firstPlace) {
+                if(x == pColor.getGridStartPos().GetX() && y == pColor.getGridStartPos().GetY())
+                    canBePlaced = true;
+                continue;
+            }
+
+            // S'il y a un pixel alors on retourne false
+            if(boardGrid[x][y] > 1) return false;
+
+            // Vérification que la pièce n'est pas collée à un pixel de la même couleur
+            if(x - 1 >= 0)
+                if(boardGrid[x - 1][y] == pColor.ordinal()) return false;
+            if(x + 1 < boardGrid.length)
+                if(boardGrid[x + 1][y] == pColor.ordinal()) return false;
+            if(y - 1 >= 0)
+                if(boardGrid[x][y - 1] == pColor.ordinal()) return false;
+            if(y + 1 < boardGrid[0].length)
+                if(boardGrid[x][y + 1] == pColor.ordinal()) return false;
+        }
+
+        // Si c'est le premier placement alors pas besoin de vérifier la suite
+        if(firstPlace)
+            return canBePlaced;
+
+        // Vérification que l'on a bien un angle de la même couleur du joueur
+        List<Vector2> corners = GetCornerOfShape();
+        for(Vector2 v : corners) {
+            if(boardGrid[v.GetX()][v.GetY()] == pColor.ordinal()) {
+                canBePlaced = true;
+            }
+        }
+
+        return canBePlaced;
+    }
+    private List<Vector2> GetCornerOfShape() {
+        List<Vector2> tempPos = new ArrayList<>();
+        List<Vector2> directUP_DOWN_LEFT_RIGHT = new ArrayList<>();
+        for(Vector2 coord : currentSelectedShape.getCoords()) {
+            int x = position.GetX() + coord.GetX();
+            int y = position.GetY() + coord.GetY();
+
+            directUP_DOWN_LEFT_RIGHT.add(new Vector2(x - 1, y));
+            directUP_DOWN_LEFT_RIGHT.add(new Vector2(x + 1, y));
+            directUP_DOWN_LEFT_RIGHT.add(new Vector2(x, y - 1));
+            directUP_DOWN_LEFT_RIGHT.add(new Vector2(x, y + 1));
+
+            tempPos.add(new Vector2(x - 1, y + 1));
+            tempPos.add(new Vector2(x - 1, y - 1));
+            tempPos.add(new Vector2(x + 1, y + 1));
+            tempPos.add(new Vector2(x + 1, y - 1));
+        }
+
+
+        List<Vector2> union = new ArrayList<>(tempPos);
+        union.addAll(directUP_DOWN_LEFT_RIGHT);
+
+        List<Vector2> intersection = new ArrayList<>(tempPos);
+        intersection.retainAll(directUP_DOWN_LEFT_RIGHT);
+
+        List<Vector2> symmetricDifference = new ArrayList<>(union);
+        symmetricDifference.removeAll(intersection);
+
+        // On retire tous les éléments qui sont hors de la grille
+        List<Vector2> posOutOfBounds = new ArrayList<>();
+        for(Vector2 v : symmetricDifference) {
+            if(v.GetX() < 0 || v.GetX() >= boardGrid.length) {
+                posOutOfBounds.add(v);
+                continue;
+            }
+            if(v.GetY() < 0 || v.GetY() >= boardGrid[0].length) {
+                posOutOfBounds.add(v);
+            }
+        }
+        symmetricDifference.removeAll(posOutOfBounds);
+
+        return symmetricDifference;
+    }
+
+    public void PlaceShape() {
+        // Si le joueur n'a rien sélectionner alors on return
+        if(currentSelectedShape.getType() == ShapeType.NONE) return;
+
+        if(!CheckIfCanPlace()) return;
+
+        if(firstPlace) {
+            firstPlace = false;
+        }
+
+        ShapePlacedArgs args = new ShapePlacedArgs(position, currentSelectedShape, GameApplication.getInstance().pId);
+        GameApplication.getInstance().SendMessage(new PlaceShapeMessage(args));
+
+        // Si c'est le serveur alors on ajoute la forme à la grille
+        if(GameApplication.getInstance().getIdentity() == NetworkIdentity.SERVER) {
+            AddShapeToGrid(args.shape, args.position, pColor);
+        }
+
+        // Récupération et suppression de la pièce que le joueur a posé de la liste
+        Group group = shapesTypeToGroup.get(currentSelectedShape.getType());
+        shapesParent.getChildren().remove(group);
+
+        currentSelectedShape = new Shape(ShapeType.NONE);
+    }
+    private void AddShapeToGrid(Shape shape, Vector2 pos, GameColor color) {
+        for(Vector2 coord : shape.getCoords()) {
+            int x = pos.GetX() + coord.GetX();
+            int y = pos.GetY() + coord.GetY();
             boardGrid[x][y] = 1;
 
-            Pixel pixel = new Pixel(currentSelectedShape.getType(), color);
+            Pixel pixel = new Pixel(shape.getType(), color.getColor(), new Vector2(30, 30));
             grid.add(pixel.getImg(), x, y);
         }
     }

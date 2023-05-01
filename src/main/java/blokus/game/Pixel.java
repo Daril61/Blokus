@@ -18,7 +18,7 @@ public class Pixel {
     private final Color color;
     private final ImageView img;
 
-    Pixel(ShapeType type, Color color) {
+    Pixel(ShapeType type, Color color, Vector2 size) {
         this.type = type;
         this.color = color;
 
@@ -26,10 +26,14 @@ public class Pixel {
         img.setFitWidth(30);
         img.setFitHeight(30);
 
+        // Création de l'effet de couleur
         ColorAdjust colorAdjust = new ColorAdjust();
-        colorAdjust.setHue(color.getHue() / 360.0);
+        colorAdjust.setInput(new javafx.scene.effect.ColorInput(
+                0, 0, size.GetX(), size.GetY(),
+                color
+        ));
 
-        // Appliquer l'effet ColorAdjust à l'ImageView
+        // Appliquer l'effet de couleur à l'ImageView
         img.setEffect(colorAdjust);
     }
 

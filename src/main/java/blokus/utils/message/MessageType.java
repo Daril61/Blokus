@@ -6,5 +6,6 @@ package blokus.utils.message;
 public enum MessageType {
     UPDATE_CONNECTED,
     LEAVE_GAME,
-    START_GAME
+    START_GAME,
+    PLACE_SHAPE
 }

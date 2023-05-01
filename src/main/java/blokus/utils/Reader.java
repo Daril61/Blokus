@@ -1,11 +1,15 @@
 package blokus.utils;
 
 import blokus.game.GameApplication;
+import blokus.game.GameSceneController;
+import blokus.utils.eventArgs.ShapePlacedArgs;
 import blokus.utils.eventArgs.UpdateConnectedArgs;
 import blokus.utils.message.LeaveEventMessage;
+import blokus.utils.message.PlaceShapeMessage;
 import blokus.utils.message.UpdateConnectedMessage;
 import blokus.utils.message.Message;
 import javafx.application.Platform;
+import javafx.scene.paint.Color;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -108,6 +112,17 @@ public class Reader extends Thread {
                         GameApplication.getInstance().OnStartGame();
                     } catch (IOException e) {
                         throw new RuntimeException(e);
+                    }
+                });
+            }
+            case PLACE_SHAPE -> {
+                PlaceShapeMessage m = (PlaceShapeMessage)message;
+                ShapePlacedArgs args = m.args;
+
+                Platform.runLater(() -> {
+                    GameApplication.getInstance().OnShapePlacedEvent.broadcast(args);
+                    if(GameApplication.getInstance().getIdentity() == NetworkIdentity.SERVER) {
+                        GameApplication.getInstance().SendMessageToAll(m);
                     }
                 });
             }
