@@ -1,5 +1,6 @@
 package blokus.game;
 
+import blokus.utils.GameColor;
 import blokus.utils.ShapeType;
 import blokus.utils.Vector2;
 import javafx.scene.CacheHint;
@@ -11,39 +12,25 @@ import javafx.scene.paint.Color;
 import java.io.File;
 
 public class Pixel {
-
-    private final static File shapePixelURL = new File("src/main/resources/Images/ShapePixel.png");
-
     private final ShapeType type;
-    private final Color color;
+    private final GameColor color;
     private final ImageView img;
 
-    Pixel(ShapeType type, Color color, Vector2 size) {
+    Pixel(ShapeType type, GameColor color, Vector2 size) {
         this.type = type;
         this.color = color;
 
-        img = new ImageView(new Image(shapePixelURL.toURI().toString()));
-        img.setFitWidth(30);
-        img.setFitHeight(30);
-
-        // Création de l'effet de couleur
-        ColorAdjust colorAdjust = new ColorAdjust();
-        colorAdjust.setInput(new javafx.scene.effect.ColorInput(
-                0, 0, size.GetX(), size.GetY(),
-                color
-        ));
-
-        // Appliquer l'effet de couleur à l'ImageView
-        img.setEffect(colorAdjust);
+        img = new ImageView(new Image(color.getImageFile().toURI().toString()));
+        img.setFitWidth(size.GetX());
+        img.setFitHeight(size.GetY());
     }
 
     public ShapeType getType() {
         return type;
     }
-    public Color getColor() {
+    public GameColor getColor() {
         return color;
     }
-
     public ImageView getImg() {
         return img;
     }

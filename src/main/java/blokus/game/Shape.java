@@ -13,8 +13,10 @@ public class Shape implements Serializable {
     private final ShapeType type;
     private final List<Vector2> coords = new ArrayList<>();
 
-    Shape(ShapeType type) {
+    public Shape(ShapeType type) {
         this.type = type;
+        if(type == ShapeType.NONE) return;
+
         for(int[] coord : type.getCoordsPixel()) {
             coords.add(new Vector2(coord[0], coord[1]));
         }
