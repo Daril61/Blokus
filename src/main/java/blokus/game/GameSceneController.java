@@ -79,6 +79,7 @@ public class GameSceneController implements Initializable {
 
         Platform.runLater(() -> {
             InitializeLater();
+            InitializeGrid();
             InitializePlayerShape();
         });
     }
@@ -94,10 +95,26 @@ public class GameSceneController implements Initializable {
         leftNbPiece.setText("" + (ShapeType.values().length-1));
         frontNbPiece.setText("" + (ShapeType.values().length-1));
         rightNbPiece.setText("" + (ShapeType.values().length-1));
-
-        InitializeGrid();
     }
     private void InitializeGrid() {
+        for (int y = 0; y < boardGrid.length; y++) {
+            for (int x = 0; x < boardGrid[y].length; x++) {
+                System.out.println(boardGrid[x][y]);
+            }
+        }
+
+        for (int y = 0; y < boardGrid.length; y++) {
+            for (int x = 0; x < boardGrid[y].length; x++) {
+                boardGrid[x][y] = -1;
+            }
+        }
+
+        for (int y = 0; y < boardGrid.length; y++) {
+            for (int x = 0; x < boardGrid[y].length; x++) {
+                System.out.println(boardGrid[x][y]);
+            }
+        }
+
         for (int row = 0; row < grid.getRowCount(); row++) {
             for (int col = 0; col < grid.getColumnCount(); col++) {
                 Rectangle cell = new Rectangle(30, 30, Color.WHITE);
@@ -114,28 +131,21 @@ public class GameSceneController implements Initializable {
                     // Action à effectuer lorsque la souris entre dans la cellule
 
                     position = new Vector2(colIndex, rowIndex);
-                    // TODO Ajout du système de preview
                     if(currentSelectedShape.getType() != ShapeType.NONE) {
                         if (pixelPreviewed.size() > 0)
                             ClearPreviewedList();
 
                         if (CheckIfOutOfBounds()) {
-                            pixelPreviewed = AddShapeToGrid(currentSelectedShape, position, pColor);
+                            pixelPreviewed = AddShapeToGrid(currentSelectedShape, position, pColor, true);
                             for (Pixel p : pixelPreviewed) {
                                 p.getImg().setMouseTransparent(true);
                             }
                         }
                     }
-
-                    cell.setStrokeWidth(3.0);
                 });
 
                 cell.setOnMouseExited(event -> {
-                    // Action à effectuer lorsque la souris quitte la cellule
-                    // TODO Retirer la pièce de preview
-                    // Suppression des pixels de la liste pixelPreviewed
                     ClearPreviewedList();
-                    cell.setStrokeWidth(2.0);
                 });
 
                 grid.add(cell, col, row);
@@ -180,7 +190,7 @@ public class GameSceneController implements Initializable {
 
         UpdatePlayerShapeNumber(shapePlacedArgs.pId);
         GameColor color = GameColor.values()[shapePlacedArgs.pId];
-        AddShapeToGrid(shapePlacedArgs.shape, shapePlacedArgs.position, color);
+        AddShapeToGrid(shapePlacedArgs.shape, shapePlacedArgs.position, color, false);
     }
     private void UpdatePlayerShapeNumber(int pId) {
         // Si c'est l'identifiant du joueur alors on ne modifie rien
@@ -211,7 +221,7 @@ public class GameSceneController implements Initializable {
                 ClearPreviewedList();
 
             if (CheckIfOutOfBounds()) {
-                pixelPreviewed = AddShapeToGrid(currentSelectedShape, position, pColor);
+                pixelPreviewed = AddShapeToGrid(currentSelectedShape, position, pColor, true);
                 for (Pixel p : pixelPreviewed) {
                     p.getImg().setMouseTransparent(true);
                 }
@@ -254,15 +264,26 @@ public class GameSceneController implements Initializable {
      */
     private boolean CheckIfCanPlace() {
         boolean canBePlaced = false;
-
+        int i = 0;
         // On regarde s'il n'y a pas un bloc sur les cases de notre futur forme
         for(Vector2 coord : currentSelectedShape.getCoords()) {
+            System.out.println("Pixel numéro : " + i);
+            i++;
             int x = position.GetX() + coord.GetX();
             int y = position.GetY() + coord.GetY();
             System.out.println("01");
             // Si les coordonnés sont en dehors de la grille
             if(x < 0 || x >= boardGrid.length) return false;
             if(y < 0 || y >= boardGrid[0].length) return false;
+
+            // S'il y a un élément d'une autre couleur au niveau de la pièce
+            for (int yy = 0; yy < boardGrid.length; yy++) {
+                for (int xx = 0; xx < boardGrid[yy].length; xx++) {
+                    System.out.println(boardGrid[xx][yy]);
+                }
+            }
+            if(boardGrid[x][y] != -1) return false;
+
             System.out.println("02");
             // Si c'est le premier placement alors on regarde si le pixel est dans l'angle
             if(firstPlace) {
@@ -295,9 +316,15 @@ public class GameSceneController implements Initializable {
         System.out.println("010");
         // Vérification que l'on a bien un angle de la même couleur du joueur
         List<Vector2> corners = GetCornerOfShape();
+        System.out.println("Après GetCorner");
+        System.out.println(" ");
         for(Vector2 v : corners) {
+            System.out.println("X : " + v.GetX() + " |Y : " + v.GetY());
+            System.out.println("Color : " + boardGrid[v.GetX()][v.GetY()]);
             if(boardGrid[v.GetX()][v.GetY()] == pColor.ordinal()) {
+                System.out.println("11");
                 canBePlaced = true;
+                break;
             }
         }
         System.out.println("12");
@@ -327,26 +354,49 @@ public class GameSceneController implements Initializable {
             directUP_DOWN_LEFT_RIGHT.add(new Vector2(x + 1, y));
             directUP_DOWN_LEFT_RIGHT.add(new Vector2(x, y - 1));
             directUP_DOWN_LEFT_RIGHT.add(new Vector2(x, y + 1));
+            directUP_DOWN_LEFT_RIGHT.add(new Vector2(x, y));
 
             tempPos.add(new Vector2(x - 1, y + 1));
             tempPos.add(new Vector2(x - 1, y - 1));
             tempPos.add(new Vector2(x + 1, y + 1));
             tempPos.add(new Vector2(x + 1, y - 1));
         }
+        //System.out.println("Pour une pièce de 4 à donne 36 :" + (directUP_DOWN_LEFT_RIGHT.size() + tempPos.size()));
 
-
-        List<Vector2> union = new ArrayList<>(tempPos);
+        /*List<Vector2> union = new ArrayList<>(tempPos);
         union.addAll(directUP_DOWN_LEFT_RIGHT);
 
         List<Vector2> intersection = new ArrayList<>(tempPos);
         intersection.retainAll(directUP_DOWN_LEFT_RIGHT);
 
         List<Vector2> symmetricDifference = new ArrayList<>(union);
-        symmetricDifference.removeAll(intersection);
+        symmetricDifference.removeAll(intersection);*/
+        List<Vector2> allValues = new ArrayList<>();
+        allValues.addAll(directUP_DOWN_LEFT_RIGHT);
+        allValues.addAll(tempPos);
+
+        System.out.println("Nombre de valeur : 36 pour 4 " + allValues.size());
+        Map<Vector2, Integer> countMap = new HashMap<>();
+
+        // Compter les occurrences de chaque élément
+        for (Vector2 value : allValues) {
+            countMap.put(value, countMap.getOrDefault(value, 0) + 1);
+        }
+
+        List<Vector2> uniqueValuesList = new ArrayList<>();
+
+        // Parcourir la liste et retirer les paires complètes
+        for (Vector2 value : allValues) {
+            if (countMap.get(value) % 2 == 1) {
+                uniqueValuesList.add(value);
+            }
+        }
+        uniqueValuesList.removeAll(directUP_DOWN_LEFT_RIGHT);
+        System.out.println("Nombre de valeur : " + uniqueValuesList.size());
 
         // On retire tous les éléments qui sont hors de la grille
         List<Vector2> posOutOfBounds = new ArrayList<>();
-        for(Vector2 v : symmetricDifference) {
+        for(Vector2 v : uniqueValuesList) {
             if(v.GetX() < 0 || v.GetX() >= boardGrid.length) {
                 posOutOfBounds.add(v);
                 continue;
@@ -355,18 +405,19 @@ public class GameSceneController implements Initializable {
                 posOutOfBounds.add(v);
             }
         }
-        symmetricDifference.removeAll(posOutOfBounds);
+        uniqueValuesList.removeAll(posOutOfBounds);
 
-        System.out.println("Nombre de points : " + symmetricDifference.size());
+        System.out.println("Nombre de points : " + uniqueValuesList.size());
 
-        return symmetricDifference;
+        return uniqueValuesList;
     }
 
     public void PlaceShape() {
         // Si le joueur n'a rien sélectionner alors on return
         if(currentSelectedShape.getType() == ShapeType.NONE) return;
-
-        if(!CheckIfCanPlace()) return;
+        boolean c = CheckIfCanPlace();
+        System.out.println("C : " + c);
+        if(!c) return;
 
         if(firstPlace) {
             firstPlace = false;
@@ -377,7 +428,7 @@ public class GameSceneController implements Initializable {
 
         // Si c'est le serveur alors on ajoute la forme à la grille
         if(GameApplication.getInstance().getIdentity() == NetworkIdentity.SERVER) {
-            AddShapeToGrid(args.shape, args.position, pColor);
+            AddShapeToGrid(args.shape, args.position, pColor, false);
         }
 
         // Récupération et suppression de la pièce que le joueur a posé de la liste
@@ -386,13 +437,14 @@ public class GameSceneController implements Initializable {
 
         currentSelectedShape = new Shape(ShapeType.NONE);
     }
-    private List<Pixel> AddShapeToGrid(Shape shape, Vector2 pos, GameColor color) {
+    private List<Pixel> AddShapeToGrid(Shape shape, Vector2 pos, GameColor color, boolean preview) {
         List<Pixel> pixels = new ArrayList<>();
 
         for(Vector2 coord : shape.getCoords()) {
             int x = pos.GetX() + coord.GetX();
             int y = pos.GetY() + coord.GetY();
-            boardGrid[x][y] = 1;
+            if(!preview)
+                boardGrid[x][y] = color.ordinal();
 
             Pixel pixel = new Pixel(shape.getType(), color, new Vector2(30, 30));
             pixels.add(pixel);
