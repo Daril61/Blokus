@@ -43,15 +43,19 @@ public class GameApplication extends Application {
     public int pId;
 
     public String ip;
+    public boolean myTurn = false;
 
     private final List<Socket> connections = new ArrayList<>();
     private final List<ObjectOutputStream> outputStreams = new ArrayList<>();
     public List<PlayerStruct> playerStructs = new ArrayList<>();
     private final List<Reader> readers = new ArrayList<>();
-    public int getNumberOfPlayers() { return connections.size(); }
+    public int getNumberOfPlayers() {
+        return connections.size();
+    }
 
     public Event OnPlayersUpdateEvent;
     public Event OnShapePlacedEvent;
+    public Event WhenMyTurn;
 
     private ServerSocket serverSocket;
 
@@ -66,6 +70,7 @@ public class GameApplication extends Application {
 
         OnPlayersUpdateEvent = new Event(EventArgsType.UPDATE_CONNECTED);
         OnShapePlacedEvent = new Event(EventArgsType.SHAPE_PlACED);
+        WhenMyTurn = new Event(null);
 
         System.out.println("test");
         GameUtils.ChangeScene(stage, FxmlType.MainMenu);

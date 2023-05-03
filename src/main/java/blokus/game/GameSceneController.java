@@ -73,6 +73,7 @@ public class GameSceneController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         GameApplication.getInstance().OnShapePlacedEvent.addListener(this::OnShapePlaced);
+        GameApplication.getInstance().WhenMyTurn.addListener(this::WhenIsMyTurn);
         currentSelectedShape = new Shape(ShapeType.C3_2);
 
         pColor = GameColor.values()[GameApplication.getInstance().pId];
@@ -185,6 +186,10 @@ public class GameSceneController implements Initializable {
         }
     }
 
+    /**
+     * Fonction appelée quand il y a une nouvelle pièce de posé
+     * @param args Argument de l'évènement
+     */
     private void OnShapePlaced(EventArgs args) {
         ShapePlacedArgs shapePlacedArgs = (ShapePlacedArgs)args;
 
@@ -192,6 +197,10 @@ public class GameSceneController implements Initializable {
         GameColor color = GameColor.values()[shapePlacedArgs.pId];
         AddShapeToGrid(shapePlacedArgs.shape, shapePlacedArgs.position, color, false);
     }
+    /**
+     * Fonction pour mettre à jour le nombre de pièce de chaque joueurs
+     * @param pId Identifiant du joueur
+     */
     private void UpdatePlayerShapeNumber(int pId) {
         // Si c'est l'identifiant du joueur alors on ne modifie rien
         if(pId == GameApplication.getInstance().pId) return;
@@ -200,6 +209,9 @@ public class GameSceneController implements Initializable {
         int nbPiece = Integer.parseInt(playersIdToNbShapeText.get(pId).getText());
         playersIdToNbShapeText.get(pId).setText("" + nbPiece);
     }
+    /**
+     * Fonction pour mettre à jour les noms des joueurs
+     */
     private void UpdatePlayersName() {
         List<Label> tempPlayersNameTextList = new ArrayList<>(List.of(leftPlayerName, frontPlayerName, rightPlayerName));
         List<Label> tempNbPieceTextList = new ArrayList<>(List.of(leftNbPiece, frontNbPiece, rightNbPiece));
@@ -257,6 +269,9 @@ public class GameSceneController implements Initializable {
 
         currentSelectedShape = new Shape(type);
     }
+    private void WhenIsMyTurn(EventArgs args) {
+        // TODO ajouter un texte qui indique que c'est à notre tour avec une animation |-MY TURN-------| |-------MY TURN--|
+    }
 
     /**
      * Fonction qui permet de savoir si on peut poser la pièce
@@ -267,11 +282,10 @@ public class GameSceneController implements Initializable {
         int i = 0;
         // On regarde s'il n'y a pas un bloc sur les cases de notre futur forme
         for(Vector2 coord : currentSelectedShape.getCoords()) {
-            System.out.println("Pixel numéro : " + i);
             i++;
             int x = position.GetX() + coord.GetX();
             int y = position.GetY() + coord.GetY();
-            System.out.println("01");
+
             // Si les coordonnés sont en dehors de la grille
             if(x < 0 || x >= boardGrid.length) return false;
             if(y < 0 || y >= boardGrid[0].length) return false;
@@ -284,50 +298,35 @@ public class GameSceneController implements Initializable {
             }
             if(boardGrid[x][y] != -1) return false;
 
-            System.out.println("02");
             // Si c'est le premier placement alors on regarde si le pixel est dans l'angle
             if(firstPlace) {
                 if(x == pColor.getGridStartPos().GetX() && y == pColor.getGridStartPos().GetY())
                     canBePlaced = true;
                 continue;
             }
-            System.out.println("03");
             // S'il y a un pixel alors on retourne false
             if(boardGrid[x][y] > 1) return false;
-            System.out.println("04");
             // Vérification que la pièce n'est pas collée à un pixel de la même couleur
             if(x - 1 >= 0)
                 if(boardGrid[x - 1][y] == pColor.ordinal()) return false;
-            System.out.println("05");
             if(x + 1 < boardGrid.length)
                 if(boardGrid[x + 1][y] == pColor.ordinal()) return false;
-            System.out.println("06");
             if(y - 1 >= 0)
                 if(boardGrid[x][y - 1] == pColor.ordinal()) return false;
-            System.out.println("07");
             if(y + 1 < boardGrid[0].length)
                 if(boardGrid[x][y + 1] == pColor.ordinal()) return false;
-            System.out.println("08");
         }
-        System.out.println("09");
         // Si c'est le premier placement alors pas besoin de vérifier la suite
         if(firstPlace)
             return canBePlaced;
-        System.out.println("010");
         // Vérification que l'on a bien un angle de la même couleur du joueur
         List<Vector2> corners = GetCornerOfShape();
-        System.out.println("Après GetCorner");
-        System.out.println(" ");
         for(Vector2 v : corners) {
-            System.out.println("X : " + v.GetX() + " |Y : " + v.GetY());
-            System.out.println("Color : " + boardGrid[v.GetX()][v.GetY()]);
             if(boardGrid[v.GetX()][v.GetY()] == pColor.ordinal()) {
-                System.out.println("11");
                 canBePlaced = true;
                 break;
             }
         }
-        System.out.println("12");
 
         return canBePlaced;
     }
@@ -361,21 +360,11 @@ public class GameSceneController implements Initializable {
             tempPos.add(new Vector2(x + 1, y + 1));
             tempPos.add(new Vector2(x + 1, y - 1));
         }
-        //System.out.println("Pour une pièce de 4 à donne 36 :" + (directUP_DOWN_LEFT_RIGHT.size() + tempPos.size()));
 
-        /*List<Vector2> union = new ArrayList<>(tempPos);
-        union.addAll(directUP_DOWN_LEFT_RIGHT);
-
-        List<Vector2> intersection = new ArrayList<>(tempPos);
-        intersection.retainAll(directUP_DOWN_LEFT_RIGHT);
-
-        List<Vector2> symmetricDifference = new ArrayList<>(union);
-        symmetricDifference.removeAll(intersection);*/
         List<Vector2> allValues = new ArrayList<>();
         allValues.addAll(directUP_DOWN_LEFT_RIGHT);
         allValues.addAll(tempPos);
 
-        System.out.println("Nombre de valeur : 36 pour 4 " + allValues.size());
         Map<Vector2, Integer> countMap = new HashMap<>();
 
         // Compter les occurrences de chaque élément
@@ -392,7 +381,6 @@ public class GameSceneController implements Initializable {
             }
         }
         uniqueValuesList.removeAll(directUP_DOWN_LEFT_RIGHT);
-        System.out.println("Nombre de valeur : " + uniqueValuesList.size());
 
         // On retire tous les éléments qui sont hors de la grille
         List<Vector2> posOutOfBounds = new ArrayList<>();
@@ -406,8 +394,6 @@ public class GameSceneController implements Initializable {
             }
         }
         uniqueValuesList.removeAll(posOutOfBounds);
-
-        System.out.println("Nombre de points : " + uniqueValuesList.size());
 
         return uniqueValuesList;
     }

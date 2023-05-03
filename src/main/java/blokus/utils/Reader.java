@@ -126,6 +126,10 @@ public class Reader extends Thread {
                     }
                 });
             }
+            case TURN -> {
+                GameApplication.getInstance().myTurn = true;
+
+            }
         }
     }
 }

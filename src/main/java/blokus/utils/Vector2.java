@@ -36,7 +36,6 @@ public class Vector2 implements Serializable {
         Vector2 vector2 = (Vector2) o;
         return x == vector2.x && y == vector2.y;
     }
-
     @Override
     public int hashCode() {
         return Objects.hash(x, y);

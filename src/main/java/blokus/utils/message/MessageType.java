@@ -7,5 +7,6 @@ public enum MessageType {
     UPDATE_CONNECTED,
     LEAVE_GAME,
     START_GAME,
-    PLACE_SHAPE
+    PLACE_SHAPE,
+    TURN
 }
