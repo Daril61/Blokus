@@ -80,6 +80,15 @@ public class Reader extends Thread {
             }
         }
         System.out.println("Fin de l'écoute");
+        if(GameApplication.getInstance().getIdentity() == NetworkIdentity.CLIENT) {
+            Platform.runLater(() -> {
+                try {
+                    GameApplication.getInstance().GameFinished();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
     }
 
     /**

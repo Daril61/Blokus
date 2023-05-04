@@ -33,6 +33,9 @@ public class GameApplication extends Application {
     }
 
     private Stage stage;
+    public Stage getStage() {
+        return stage;
+    }
     private boolean gameStart;
 
     private NetworkIdentity identity;
@@ -56,6 +59,7 @@ public class GameApplication extends Application {
     public Event OnPlayersUpdateEvent;
     public Event OnShapePlacedEvent;
     public Event WhenMyTurn;
+    public Event OnGameRankReceivedEvent;
 
     private ServerSocket serverSocket;
 
@@ -71,6 +75,7 @@ public class GameApplication extends Application {
         OnPlayersUpdateEvent = new Event(EventArgsType.UPDATE_CONNECTED);
         OnShapePlacedEvent = new Event(EventArgsType.SHAPE_PlACED);
         WhenMyTurn = new Event(null);
+        OnGameRankReceivedEvent = new Event(EventArgsType.GAME_RANK);
 
         System.out.println("test");
         GameUtils.ChangeScene(stage, FxmlType.MainMenu);
@@ -154,6 +159,31 @@ public class GameApplication extends Application {
         gameStart = true;
         SendMessageToAll(new StartGameMessage());
         OnStartGame();
+    }
+
+    /**
+     * Fonction appelée quand on clique sur le bouton "Menu principal" dans la scène de jeu
+     */
+    public void GameFinished() throws IOException {
+        // On arrête les systèmes d'écoutes
+        for(Reader r : readers) {
+            r.interrupt();
+        }
+
+        // Récupération de chaque connexion
+        for(Socket s : connections) {
+            s.close();
+        }
+
+        if(identity == NetworkIdentity.SERVER)
+            serverSocket.close();
+
+        readers.clear();
+        connections.clear();
+        playerStructs.clear();
+        outputStreams.clear();
+
+        GameUtils.ChangeScene(stage, FxmlType.MainMenu);
     }
 
     /**

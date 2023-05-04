@@ -1,30 +1,34 @@
 package blokus.game;
 
-import blokus.utils.GameColor;
-import blokus.utils.NetworkIdentity;
-import blokus.utils.ShapeType;
-import blokus.utils.Vector2;
+import blokus.utils.*;
 import blokus.utils.eventArgs.EventArgs;
+import blokus.utils.eventArgs.GameRankArgs;
 import blokus.utils.eventArgs.ShapePlacedArgs;
+import blokus.utils.message.GameRankMessage;
 import blokus.utils.message.PlaceShapeMessage;
+
+import javafx.animation.PauseTransition;
+import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.Stage;
+import javafx.util.Duration;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
@@ -35,6 +39,8 @@ import java.util.*;
  * @since 28/04/2023
  */
 public class GameSceneController implements Initializable {
+
+    private static final int FRAME_DURATION = 50;
 
     private Vector2 position;
     Shape currentSelectedShape;
@@ -70,10 +76,17 @@ public class GameSceneController implements Initializable {
     private boolean firstPlace = true;
     private List<Pixel> pixelPreviewed = new ArrayList<>();
 
+    /**
+     * Initialise le contrôleur une fois que la vue a été chargée.
+     *
+     * @param url              L'URL de la vue.
+     * @param resourceBundle   Les ressources associées à la vue.
+     */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         GameApplication.getInstance().OnShapePlacedEvent.addListener(this::OnShapePlaced);
         GameApplication.getInstance().WhenMyTurn.addListener(this::WhenIsMyTurn);
+        GameApplication.getInstance().OnGameRankReceivedEvent.addListener(this::OnGameRankReceived);
         currentSelectedShape = new Shape(ShapeType.C3_2);
 
         pColor = GameColor.values()[GameApplication.getInstance().pId];
@@ -84,54 +97,68 @@ public class GameSceneController implements Initializable {
             InitializePlayerShape();
         });
     }
+
+    /**
+     * Initialise les éléments de l'interface graphique ultérieurement.
+     */
     private void InitializeLater() {
         // Récupération de la scène
         Scene scene = root.getScene();
 
-        // Ajout de la détection d'appuyer de touche
-        scene.setOnKeyPressed(this::OnKeyPressed);
+        // Ajout de la détection des clics de souris
+        scene.setOnMouseClicked(this::OnMouseClicked);
 
-        // On met à jour les différentes informations des joueurs
+        // Mise à jour des informations des joueurs
         UpdatePlayersName();
-        leftNbPiece.setText("" + (ShapeType.values().length-1));
-        frontNbPiece.setText("" + (ShapeType.values().length-1));
-        rightNbPiece.setText("" + (ShapeType.values().length-1));
+        leftNbPiece.setText(String.valueOf(ShapeType.values().length - 1));
+        frontNbPiece.setText(String.valueOf(ShapeType.values().length - 1));
+        rightNbPiece.setText(String.valueOf(ShapeType.values().length - 1));
     }
+    /**
+     * Initialise la grille du jeu.
+     */
     private void InitializeGrid() {
+        // Affichage de la grille avant l'initialisation
         for (int y = 0; y < boardGrid.length; y++) {
             for (int x = 0; x < boardGrid[y].length; x++) {
                 System.out.println(boardGrid[x][y]);
             }
         }
 
+        // Initialisation de la grille avec des valeurs par défaut (-1)
         for (int y = 0; y < boardGrid.length; y++) {
             for (int x = 0; x < boardGrid[y].length; x++) {
                 boardGrid[x][y] = -1;
             }
         }
 
+        // Affichage de la grille après l'initialisation
         for (int y = 0; y < boardGrid.length; y++) {
             for (int x = 0; x < boardGrid[y].length; x++) {
                 System.out.println(boardGrid[x][y]);
             }
         }
 
+        // Parcours des lignes et des colonnes de la grille
         for (int row = 0; row < grid.getRowCount(); row++) {
             for (int col = 0; col < grid.getColumnCount(); col++) {
+                // Création d'une cellule de type Rectangle
                 Rectangle cell = new Rectangle(30, 30, Color.WHITE);
                 cell.setStroke(Color.BLACK);
                 cell.setStrokeWidth(2.0);
 
+                // Gestion de l'événement lorsque la souris entre dans la cellule
                 cell.setOnMouseEntered(e -> {
                     Node source = e.getPickResult().getIntersectedNode();
                     Integer colIndex = GridPane.getColumnIndex(source);
                     Integer rowIndex = GridPane.getRowIndex(source);
 
-                    // Si on ne peut pax récupérer une ligne ou une colonne par rapport au clique
+                    // Vérification si une ligne ou une colonne peut être récupérée à partir du nœud cliqué
                     if(colIndex == null || rowIndex == null) return;
-                    // Action à effectuer lorsque la souris entre dans la cellule
 
+                    // Actions à effectuer lorsque la souris entre dans la cellule
                     position = new Vector2(colIndex, rowIndex);
+
                     if(currentSelectedShape.getType() != ShapeType.NONE) {
                         if (pixelPreviewed.size() > 0)
                             ClearPreviewedList();
@@ -145,15 +172,17 @@ public class GameSceneController implements Initializable {
                     }
                 });
 
+                // Gestion de l'événement lorsque la souris quitte la cellule
                 cell.setOnMouseExited(event -> {
                     ClearPreviewedList();
                 });
 
+                // Ajout de la cellule à la grille
                 grid.add(cell, col, row);
             }
         }
 
-        // On applique les couleurs au niveau des angles pour le point de départ
+        // Application des couleurs aux coins de la grille pour les points de départ
         for(GameColor c : GameColor.values()) {
             Rectangle rect = (Rectangle) grid.getChildren().stream()
                     .filter(node -> GridPane.getRowIndex(node) == c.getGridStartPos().GetY() && GridPane.getColumnIndex(node) == c.getGridStartPos().GetX())
@@ -164,30 +193,43 @@ public class GameSceneController implements Initializable {
             rect.setFill(c.getColor().deriveColor(0, 1, 1, 0.5));
         }
     }
+    /**
+     * Initialise la forme du joueur.
+     */
     private void InitializePlayerShape() {
-        // Pour chaque pièce différente dans le jeu
+        // Pour chaque type de forme différente dans le jeu
         for(ShapeType type : ShapeType.values()) {
             if(type == ShapeType.NONE) continue;
 
+            // Création d'un groupe pour la forme
             Group group = new Group();
 
+            // Parcours des coordonnées des pixels de la forme
             for(int[] coord : type.getCoordsPixel()) {
+                // Création d'un objet Pixel avec le type, la couleur et les dimensions spécifiées
                 Pixel pixel = new Pixel(type, pColor, new Vector2(15, 15));
                 pixel.getImg().setLayoutX(coord[0] * 15);
                 pixel.getImg().setLayoutY(coord[1] * 15);
 
+                // Gestion de l'événement lorsque le pixel est cliqué
                 pixel.getImg().setOnMousePressed((e) -> OnShapePressed(type));
+
+                // Ajout de l'image du pixel au groupe
                 group.getChildren().add(pixel.getImg());
             }
 
+            // Ajout du groupe correspondant au type de forme à la map
             shapesTypeToGroup.put(type, group);
 
+            // Ajout du groupe à la parent des formes
             shapesParent.getChildren().add(group);
         }
     }
 
+
     /**
      * Fonction appelée quand il y a une nouvelle pièce de posé
+     *
      * @param args Argument de l'évènement
      */
     private void OnShapePlaced(EventArgs args) {
@@ -197,8 +239,67 @@ public class GameSceneController implements Initializable {
         GameColor color = GameColor.values()[shapePlacedArgs.pId];
         AddShapeToGrid(shapePlacedArgs.shape, shapePlacedArgs.position, color, false);
     }
+    private void OnGameRankReceived(EventArgs args) {
+        GameRankArgs gameRankArgs = (GameRankArgs)args;
+
+        Image img;
+        if(gameRankArgs.rank == 1) {
+            img = new Image(GifType.Victory.getGifFile().toURI().toString());
+        } else {
+            img = new Image(GifType.Defeat.getGifFile().toURI().toString());
+        }
+
+        // Création de l'ImageView pour afficher le GIF
+        ImageView gifImageView = new ImageView(img);
+        gifImageView.setPreserveRatio(true);
+
+        Stage stage = GameApplication.getInstance().getStage();
+        double windowWidth = stage.getWidth();
+        double windowHeight = stage.getHeight();
+        gifImageView.setFitWidth(windowWidth);
+        gifImageView.setFitHeight(windowHeight);
+
+        root.getChildren().add(gifImageView);
+
+        Button button = new Button("Menu principal");
+        button.setPrefSize(331, 51);
+        button.setTranslateX(stage.getScene().getWidth()); // Déplace le bouton en dehors de l'écran à droite
+        button.setTranslateY(stage.getScene().getHeight() / 2); // Centre verticalement le bouton
+
+        TranslateTransition transition = new TranslateTransition(Duration.seconds(1), button);
+        transition.setToX((stage.getScene().getWidth()/2) - button.getPrefWidth()/2); // Déplace le bouton vers la position X = 0
+        transition.play();
+
+        root.getChildren().add(button);
+
+        // Attendez 3 secondes avant d'afficher le bouton
+        PauseTransition delay = new PauseTransition(Duration.seconds(3));
+        delay.setOnFinished(event -> {
+            button.setVisible(true);
+        });
+        delay.play();
+
+        button.setOnAction((e) -> {
+            try {
+                GameApplication.getInstance().GameFinished();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+    }
     /**
-     * Fonction pour mettre à jour le nombre de pièce de chaque joueurs
+     * Fonction appelée lorsque c'est au tour du joueur, elle est appelée par l'event WhenMyTurn
+     *
+     * @param args Argument de l'évènement
+     */
+    private void WhenIsMyTurn(EventArgs args) {
+        // TODO ajouter un texte qui indique que c'est à notre tour avec une animation |-MY TURN-------| |-------MY TURN--|
+    }
+
+
+    /**
+     * Fonction pour mettre à jour le nombre de pièces de chaque joueur
+     *
      * @param pId Identifiant du joueur
      */
     private void UpdatePlayerShapeNumber(int pId) {
@@ -221,29 +322,57 @@ public class GameSceneController implements Initializable {
             if(index > 3) index = 0;
 
             playersIdToNbShapeText.put(index, tempNbPieceTextList.get(i));
-            tempPlayersNameTextList.get(i).setText(GameApplication.getInstance().playerStructs.get(i).pName);
+            tempPlayersNameTextList.get(i).setText(GameApplication.getInstance().playerStructs.get(index).pName);
+            tempPlayersNameTextList.get(i).setBackground(new Background(new BackgroundFill(GameColor.values()[index].getColor(), null, null)));
             index++;
         }
     }
 
-    private void OnKeyPressed(KeyEvent event) {
-        if(event.getCode() == KeyCode.D) {
+
+    /**
+     * Fonction qui gère l'événement de clic de souris.
+     *
+     * @param event L'événement de clic de souris
+     */
+    private void OnMouseClicked(MouseEvent event) {
+        if(event.getButton() == MouseButton.SECONDARY) {
+            // Rotation vers la droite de la forme sélectionnée
             currentSelectedShape = currentSelectedShape.RightRotate();
+
+            // Effacer la liste de prévisualisation des pixels s'il y en a
             if (pixelPreviewed.size() > 0)
                 ClearPreviewedList();
 
+            // Vérifier si la forme sélectionnée dépasse des limites de la grille
             if (CheckIfOutOfBounds()) {
+                // Ajouter la forme à la grille pour la prévisualisation
                 pixelPreviewed = AddShapeToGrid(currentSelectedShape, position, pColor, true);
+
+                // Rendre les images des pixels de prévisualisation non cliquables
                 for (Pixel p : pixelPreviewed) {
                     p.getImg().setMouseTransparent(true);
                 }
             }
         }
 
-        if(event.getCode() == KeyCode.P) {
+        if(event.getButton() == MouseButton.PRIMARY) {
+            // Placer la forme sélectionnée
             PlaceShape();
         }
+        if(event.getButton() == MouseButton.MIDDLE) {
+            GameRankArgs args = new GameRankArgs(1);
+            GameApplication.getInstance().SendMessage(new GameRankMessage(args));
+
+            if(GameApplication.getInstance().getIdentity() == NetworkIdentity.SERVER) {
+                OnGameRankReceived(args);
+            }
+        }
     }
+    /**
+     * Fonction appelée quand on sélectionne une forme depuis le menu à droite de la grille
+     *
+     * @param type Type de la forme
+     */
     private void OnShapePressed(ShapeType type) {
         // Récupération des anciennes images qui appartiennent au type
         if(currentSelectedShape.getType() != ShapeType.NONE) {
@@ -269,12 +398,9 @@ public class GameSceneController implements Initializable {
 
         currentSelectedShape = new Shape(type);
     }
-    private void WhenIsMyTurn(EventArgs args) {
-        // TODO ajouter un texte qui indique que c'est à notre tour avec une animation |-MY TURN-------| |-------MY TURN--|
-    }
-
     /**
      * Fonction qui permet de savoir si on peut poser la pièce
+     *
      * @return Vrai (true) si on peut poser la pièce, Faux (false) si on ne peut pas
      */
     private boolean CheckIfCanPlace() {
@@ -330,6 +456,11 @@ public class GameSceneController implements Initializable {
 
         return canBePlaced;
     }
+    /**
+     * Fonction qui permet de vérifier si la ou passe la souris la forme peut rentrer dans la grille
+     *
+     * @return Vrai si la forme peut rentrer dans la grille
+     */
     private boolean CheckIfOutOfBounds() {
         for(Vector2 coord : currentSelectedShape.getCoords()) {
             int x = position.GetX() + coord.GetX();
@@ -342,9 +473,16 @@ public class GameSceneController implements Initializable {
 
         return true;
     }
+    /**
+     * Fonction qui permet d'avoir tous les angles d'une forme
+     *
+     * @return La liste des angles de la forme que le joueur a sélectionné
+     */
     private List<Vector2> GetCornerOfShape() {
         List<Vector2> tempPos = new ArrayList<>();
         List<Vector2> directUP_DOWN_LEFT_RIGHT = new ArrayList<>();
+
+        // Récupération pour chaque pixel de la forme des voisins direct ainsi que des angles
         for(Vector2 coord : currentSelectedShape.getCoords()) {
             int x = position.GetX() + coord.GetX();
             int y = position.GetY() + coord.GetY();
@@ -397,13 +535,13 @@ public class GameSceneController implements Initializable {
 
         return uniqueValuesList;
     }
-
+    /**
+     * Fonction qui permet de démarrer l'action de poser une forme
+     */
     public void PlaceShape() {
         // Si le joueur n'a rien sélectionner alors on return
         if(currentSelectedShape.getType() == ShapeType.NONE) return;
-        boolean c = CheckIfCanPlace();
-        System.out.println("C : " + c);
-        if(!c) return;
+        if(!CheckIfCanPlace()) return;
 
         if(firstPlace) {
             firstPlace = false;
@@ -423,6 +561,16 @@ public class GameSceneController implements Initializable {
 
         currentSelectedShape = new Shape(ShapeType.NONE);
     }
+    /**
+     * Fonction qui permet d'ajouter une forme à la grille
+     *
+     * @param shape La forme à ajouter
+     * @param pos La position X et Y de la grille
+     * @param color La couleur que la forme doit avoir
+     * @param preview Sert à rajouter un élément à la liste de preview
+     *
+     * @return La liste des pixels ajoutée
+     */
     private List<Pixel> AddShapeToGrid(Shape shape, Vector2 pos, GameColor color, boolean preview) {
         List<Pixel> pixels = new ArrayList<>();
 
@@ -439,7 +587,9 @@ public class GameSceneController implements Initializable {
 
         return pixels;
     }
-
+    /**
+     * Fonction pour retirer tous les éléments de la liste de preview
+     */
     private void ClearPreviewedList() {
         for(Pixel p : pixelPreviewed) {
             grid.getChildren().remove(p.getImg());
