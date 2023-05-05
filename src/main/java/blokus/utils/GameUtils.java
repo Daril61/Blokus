@@ -10,6 +10,12 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.Objects;
 
+/**
+ * Classe contenant toutes les fonctions utiles un peu partout dans le jeu
+ *
+ * @author Romain Veydarier
+ * @since 04/05/2023
+ */
 public class GameUtils {
 
     /**

@@ -4,6 +4,7 @@ import blokus.utils.*;
 import blokus.utils.eventArgs.EventArgs;
 import blokus.utils.eventArgs.GameRankArgs;
 import blokus.utils.eventArgs.ShapePlacedArgs;
+import blokus.utils.message.AbandonedMessage;
 import blokus.utils.message.GameRankMessage;
 import blokus.utils.message.PlaceShapeMessage;
 
@@ -66,6 +67,10 @@ public class GameSceneController implements Initializable {
     private Label rightPlayerName;
     @FXML
     private Label rightNbPiece;
+
+    @FXML
+    private Label playerTimer;
+    private Timer timer;
 
     private GameColor pColor;
 
@@ -248,43 +253,44 @@ public class GameSceneController implements Initializable {
         } else {
             img = new Image(GifType.Defeat.getGifFile().toURI().toString());
         }
+        Platform.runLater(() -> {
+            // Création de l'ImageView pour afficher le GIF
+            ImageView gifImageView = new ImageView(img);
+            gifImageView.setPreserveRatio(true);
 
-        // Création de l'ImageView pour afficher le GIF
-        ImageView gifImageView = new ImageView(img);
-        gifImageView.setPreserveRatio(true);
+            Stage stage = GameApplication.getInstance().getStage();
+            double windowWidth = stage.getWidth();
+            double windowHeight = stage.getHeight();
+            gifImageView.setFitWidth(windowWidth);
+            gifImageView.setFitHeight(windowHeight);
 
-        Stage stage = GameApplication.getInstance().getStage();
-        double windowWidth = stage.getWidth();
-        double windowHeight = stage.getHeight();
-        gifImageView.setFitWidth(windowWidth);
-        gifImageView.setFitHeight(windowHeight);
+            root.getChildren().add(gifImageView);
 
-        root.getChildren().add(gifImageView);
+            Button button = new Button("Menu principal");
+            button.setPrefSize(331, 51);
+            button.setTranslateX(stage.getScene().getWidth()); // Déplace le bouton en dehors de l'écran à droite
+            button.setTranslateY(stage.getScene().getHeight() / 2); // Centre verticalement le bouton
 
-        Button button = new Button("Menu principal");
-        button.setPrefSize(331, 51);
-        button.setTranslateX(stage.getScene().getWidth()); // Déplace le bouton en dehors de l'écran à droite
-        button.setTranslateY(stage.getScene().getHeight() / 2); // Centre verticalement le bouton
+            TranslateTransition transition = new TranslateTransition(Duration.seconds(1), button);
+            transition.setToX((stage.getScene().getWidth()/2) - button.getPrefWidth()/2); // Déplace le bouton vers la position X = 0
+            transition.play();
 
-        TranslateTransition transition = new TranslateTransition(Duration.seconds(1), button);
-        transition.setToX((stage.getScene().getWidth()/2) - button.getPrefWidth()/2); // Déplace le bouton vers la position X = 0
-        transition.play();
+            root.getChildren().add(button);
 
-        root.getChildren().add(button);
+            // Attendez 3 secondes avant d'afficher le bouton
+            PauseTransition delay = new PauseTransition(Duration.seconds(3));
+            delay.setOnFinished(event -> {
+                button.setVisible(true);
+            });
+            delay.play();
 
-        // Attendez 3 secondes avant d'afficher le bouton
-        PauseTransition delay = new PauseTransition(Duration.seconds(3));
-        delay.setOnFinished(event -> {
-            button.setVisible(true);
-        });
-        delay.play();
-
-        button.setOnAction((e) -> {
-            try {
-                GameApplication.getInstance().GameFinished();
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
+            button.setOnAction((e) -> {
+                try {
+                    GameApplication.getInstance().GameFinished();
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            });
         });
     }
     /**
@@ -293,9 +299,86 @@ public class GameSceneController implements Initializable {
      * @param args Argument de l'évènement
      */
     private void WhenIsMyTurn(EventArgs args) {
-        // TODO ajouter un texte qui indique que c'est à notre tour avec une animation |-MY TURN-------| |-------MY TURN--|
+        StartTimer();
+
+        Platform.runLater(() -> {
+            // Création du Label avec le texte souhaité
+            Label label = new Label("C'est à votre tour !");
+
+            // Définition du style du Label pour permettre le défilement du texte
+            label.setStyle("-fx-background-color: white; -fx-padding: 10px;");
+            label.setWrapText(true);
+
+            // Création de la transition de déplacement
+            TranslateTransition transition = new TranslateTransition(Duration.seconds(5), label);
+            transition.setFromX(-label.getWidth());
+            transition.setToX(400); // Définir la distance de déplacement souhaitée
+
+            // Création d'une pause à mi-chemin pour l'arrêt du texte
+            PauseTransition pause = new PauseTransition(Duration.seconds(2));
+            pause.setOnFinished(event -> {
+                transition.stop();
+                root.getChildren().remove(label);
+            });
+
+            // Démarrage de la transition
+            transition.play();
+            pause.play();
+
+            root.getChildren().add(label);
+        });
     }
 
+    /**
+     * Fonction qui permet de mettre en place le timer
+     */
+    private void StartTimer() {
+        System.out.println("StartTimer()");
+
+        timer = new Timer();
+
+        TimerTask task = new TimerTask() {
+            int count = 15; // Nombre total de secondes
+
+            @Override
+            public void run() {
+                if (count > 0) {
+                    Platform.runLater(() -> {
+                        System.out.println("Count : " + count);
+                        playerTimer.setText("" + count);
+                    });
+                    count--;
+                } else {
+                    StopTimer();
+                    Abandoned();
+                }
+            }
+        };
+
+        timer.scheduleAtFixedRate(task, 0, 1000);
+    }
+    /**
+     * Fonction qui permet d'arrêter le timer
+     */
+    private void StopTimer() {
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+            Platform.runLater(() -> {
+                playerTimer.setText("15");
+            });
+        }
+    }
+    /**
+     * Fonction qui permet d'abandonner
+     */
+    private void Abandoned() {
+        GameApplication.getInstance().myTurn = false;
+        if(GameApplication.getInstance().getIdentity() == NetworkIdentity.CLIENT)
+            GameApplication.getInstance().SendMessage(new AbandonedMessage(GameApplication.getInstance().pId));
+        else
+            GameApplication.getInstance().RemoveTurnPlayer(-1);
+    }
 
     /**
      * Fonction pour mettre à jour le nombre de pièces de chaque joueur
@@ -539,8 +622,11 @@ public class GameSceneController implements Initializable {
      * Fonction qui permet de démarrer l'action de poser une forme
      */
     public void PlaceShape() {
+        // Vérification que c'est le tour du joueur
+        if(!GameApplication.getInstance().myTurn) return;
         // Si le joueur n'a rien sélectionner alors on return
         if(currentSelectedShape.getType() == ShapeType.NONE) return;
+        // S'il ne peut pas poser la pièce
         if(!CheckIfCanPlace()) return;
 
         if(firstPlace) {
@@ -558,6 +644,8 @@ public class GameSceneController implements Initializable {
         // Récupération et suppression de la pièce que le joueur a posé de la liste
         Group group = shapesTypeToGroup.get(currentSelectedShape.getType());
         shapesParent.getChildren().remove(group);
+        GameApplication.getInstance().myTurn = false;
+        StopTimer();
 
         currentSelectedShape = new Shape(ShapeType.NONE);
     }

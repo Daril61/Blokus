@@ -2,12 +2,11 @@ package blokus.utils;
 
 import blokus.game.GameApplication;
 import blokus.game.GameSceneController;
+import blokus.utils.eventArgs.GameRankArgs;
 import blokus.utils.eventArgs.ShapePlacedArgs;
+import blokus.utils.eventArgs.TurnArgs;
 import blokus.utils.eventArgs.UpdateConnectedArgs;
-import blokus.utils.message.LeaveEventMessage;
-import blokus.utils.message.PlaceShapeMessage;
-import blokus.utils.message.UpdateConnectedMessage;
-import blokus.utils.message.Message;
+import blokus.utils.message.*;
 import javafx.application.Platform;
 import javafx.scene.paint.Color;
 
@@ -132,12 +131,25 @@ public class Reader extends Thread {
                     GameApplication.getInstance().OnShapePlacedEvent.broadcast(args);
                     if(GameApplication.getInstance().getIdentity() == NetworkIdentity.SERVER) {
                         GameApplication.getInstance().SendMessageToAll(m);
+                        GameApplication.getInstance().ChangeTurn();
                     }
                 });
             }
             case TURN -> {
                 GameApplication.getInstance().myTurn = true;
 
+                GameApplication.getInstance().WhenMyTurn.broadcast(new TurnArgs());
+            }
+            case ABANDONED -> {
+                AbandonedMessage m = (AbandonedMessage)message;
+
+                GameApplication.getInstance().RemoveTurnPlayer(m.pId);
+            }
+            case GAME_RANK -> {
+                GameRankMessage m = (GameRankMessage)message;
+                GameRankArgs args = m.args;
+
+                GameApplication.getInstance().OnGameRankReceivedEvent.broadcast(args);
             }
         }
     }

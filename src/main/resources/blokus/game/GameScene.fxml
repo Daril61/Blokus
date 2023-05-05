@@ -8,6 +8,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.text.Font?>
 
 <Pane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="blokus.game.GameSceneController">
    <children>
@@ -77,5 +78,10 @@
          </children>
       </VBox>
       <FlowPane fx:id="shapesParent" hgap="5.0" layoutX="808.0" maxHeight="800.0" maxWidth="192.0" minHeight="800.0" minWidth="192.0" prefHeight="800.0" prefWidth="192.0" prefWrapLength="0.0" vgap="5.0" />
+      <Label fx:id="playerTimer" layoutX="384.0" layoutY="744.0" text="30 " textAlignment="CENTER">
+         <font>
+            <Font name="System Bold" size="23.0" />
+         </font>
+      </Label>
    </children>
 </Pane>

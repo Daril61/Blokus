@@ -1,12 +1,12 @@
 package blokus.utils.message;
 
 /**
- * Message quand un joueur quitte la partie avec la liste des joueurs connectée
+ * Message qui permet à un joueur d'abandonner
  *
  * @since 28/04/2023
  * @author Romain Veydarier
  */
-public class LeaveEventMessage extends Message {
+public class AbandonedMessage extends Message {
 
     /**
      * Identifiant du joueur
@@ -18,7 +18,7 @@ public class LeaveEventMessage extends Message {
      *
      * @param pId Identifiant du joueur
      */
-    public LeaveEventMessage(int pId) {
+    public AbandonedMessage(int pId) {
         this.pId = pId;
     }
 
@@ -28,8 +28,6 @@ public class LeaveEventMessage extends Message {
      */
     @Override
     public MessageType getType() {
-        return MessageType.LEAVE_GAME;
+        return MessageType.ABANDONED;
     }
-
 }
-

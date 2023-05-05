@@ -2,12 +2,11 @@ package blokus.game;
 
 import blokus.utils.*;
 import blokus.utils.eventArgs.EventArgsType;
+import blokus.utils.eventArgs.GameRankArgs;
+import blokus.utils.eventArgs.TurnArgs;
 import blokus.utils.eventArgs.UpdateConnectedArgs;
 import blokus.utils.PlayerStruct;
-import blokus.utils.message.StartGameMessage;
-import blokus.utils.message.UpdateConnectedMessage;
-import blokus.utils.message.LeaveEventMessage;
-import blokus.utils.message.Message;
+import blokus.utils.message.*;
 import javafx.application.Application;
 import javafx.scene.SubScene;
 import javafx.stage.Stage;
@@ -52,6 +51,8 @@ public class GameApplication extends Application {
     private final List<ObjectOutputStream> outputStreams = new ArrayList<>();
     public List<PlayerStruct> playerStructs = new ArrayList<>();
     private final List<Reader> readers = new ArrayList<>();
+    private final List<ObjectOutputStream> pOrder = new ArrayList<>();
+    private int idOrder = 0;
     public int getNumberOfPlayers() {
         return connections.size();
     }
@@ -74,7 +75,7 @@ public class GameApplication extends Application {
 
         OnPlayersUpdateEvent = new Event(EventArgsType.UPDATE_CONNECTED);
         OnShapePlacedEvent = new Event(EventArgsType.SHAPE_PlACED);
-        WhenMyTurn = new Event(null);
+        WhenMyTurn = new Event(EventArgsType.TURN_ARGS);
         OnGameRankReceivedEvent = new Event(EventArgsType.GAME_RANK);
 
         System.out.println("test");
@@ -157,7 +158,13 @@ public class GameApplication extends Application {
         if(gameStart) return;
 
         gameStart = true;
+
+        pOrder.add(null);
+        pOrder.addAll(outputStreams);
+
         SendMessageToAll(new StartGameMessage());
+        myTurn = true;
+        WhenMyTurn.broadcast(new TurnArgs());
         OnStartGame();
     }
 
@@ -246,6 +253,8 @@ public class GameApplication extends Application {
     public void SendMessage(Message message) {
         // Si c'est le serveur qui envoie le message alors il envoie le serveur à chaque personne
         if(identity == NetworkIdentity.SERVER) {
+            ChangeTurn();
+
             SendMessageToAll(message);
             return;
         }
@@ -253,7 +262,6 @@ public class GameApplication extends Application {
         System.out.println("SendMessage");
         SendMessage(message, outputStreams.get(0));
     }
-
     /**
      * Fonction qui permet au serveur d'envoyer un message à un joueur spécifique
      *
@@ -264,7 +272,6 @@ public class GameApplication extends Application {
 
         SendMessage(message, outputStreams.get(0));
     }
-
     /**
      * Fonction qui permet au serveur d'envoyer un message à chaque client connecté
      */
@@ -275,7 +282,6 @@ public class GameApplication extends Application {
             SendMessage(message, stream);
         }
     }
-
     /**
      * Fonction qui permet d'envoyer un message à un flux d'envoi
      * @param message Message que l'on envoi
@@ -289,6 +295,62 @@ public class GameApplication extends Application {
             System.out.println("Erreur : " + e.getMessage());
 
         }
+    }
+
+    /**
+     * Fonction qui permet de changer de tour
+     */
+    public void ChangeTurn() {
+        idOrder++;
+        if(idOrder >= pOrder.size()) {
+            idOrder = 0;
+        }
+
+        // Si c'est le serveur
+        if(pOrder.get(idOrder) == null) {
+            myTurn = true;
+            WhenMyTurn.broadcast(new TurnArgs());
+
+            return;
+        }
+        SendMessage(new TurnMessage(), pOrder.get(idOrder));
+    }
+    public void RemoveTurnPlayer(int pId) {
+        // Si c'est le serveur
+        if(pId == -1) {
+            pOrder.remove(null);
+        } else {
+            pOrder.remove(outputStreams.get(pId-1));
+        }
+
+        // S'il reste qu'une personne alors elle a gagné
+        if(pOrder.size() == 1) {
+            if(pOrder.get(0) == null)
+            {
+                GameRankArgs args = new GameRankArgs(0);
+                SendMessageToAll(new GameRankMessage(args));
+
+                OnGameRankReceivedEvent.broadcast(new GameRankArgs(1));
+            } else {
+                int index = outputStreams.indexOf(pOrder.get(0));
+                ObjectOutputStream o = outputStreams.get(index);
+                SendMessage(new GameRankMessage(new GameRankArgs(1)), o);
+
+                GameRankArgs args = new GameRankArgs(0);
+                for (int i = 0; i < outputStreams.size(); i++) {
+                    if(outputStreams.get(i) == o) continue;
+
+                    SendMessage(new GameRankMessage(args), outputStreams.get(i));
+                }
+
+                OnGameRankReceivedEvent.broadcast(args);
+            }
+
+            return;
+        }
+
+        // Sinon on continue
+        ChangeTurn();
     }
 
     /**

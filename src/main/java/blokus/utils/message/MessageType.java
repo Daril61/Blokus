@@ -9,5 +9,6 @@ public enum MessageType {
     START_GAME,
     PLACE_SHAPE,
     TURN,
+    ABANDONED,
     GAME_RANK
 }

@@ -1,5 +1,11 @@
 package blokus.utils;
 
+/**
+ * Enumération des pièces possibles dans le jeu
+ *
+ * @author Romain Veydarier
+ * @since 04/05/2023
+ */
 public enum ShapeType {
     NONE(new int[][]{{}}),
     A1_1(new int[][]{{0, 0}}),

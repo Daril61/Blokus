@@ -2,6 +2,9 @@ package blokus.utils;
 
 /**
  * Enumeration des types de scène disponible dans le jeu
+ *
+ * @author Romain Veydarier
+ * @since 04/05/2023
  */
 public enum FxmlType {
     MainMenu("MainMenu.fxml", "Menu principal"),
