@@ -1,6 +1,7 @@
 module blokus.blokus {
     requires javafx.controls;
     requires javafx.fxml;
+    requires javafx.media;
 
     opens blokus.game to javafx.fxml;
 

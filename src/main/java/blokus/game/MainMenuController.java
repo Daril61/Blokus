@@ -2,12 +2,15 @@ package blokus.game;
 
 import blokus.utils.NetworkIdentity;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Group;
 import javafx.scene.control.TextField;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.util.Duration;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -20,13 +23,27 @@ import java.util.ResourceBundle;
  */
 public class MainMenuController implements Initializable {
 
+    /**
+     * Groupe qui contient chaque élément du menu principal
+     */
     @FXML
     private Group mainMenu;
+    /**
+     * Fonction qui contient chaque élément du menu de networking
+     */
     @FXML
     private Group networkMenu;
 
+    /**
+     * Champs de texte pour l'adresse ip
+     */
     @FXML
     private TextField ipField;
+
+    /**
+     * Player pour lancer les sons de clique sur les boutons
+     */
+    private MediaPlayer mediaPlayer;
 
     /**
      * Fonction execute au lancement de l'application
@@ -36,6 +53,8 @@ public class MainMenuController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         Platform.runLater(this::SetupMenu);
+        Media media = new Media(new File("src/main/resources/sounds/buttonClicked.wav").toURI().toString());
+        mediaPlayer = new MediaPlayer(media);
     }
 
     /**
@@ -54,6 +73,8 @@ public class MainMenuController implements Initializable {
      */
     @FXML
     private void PlayButton() {
+        ButtonClicked();
+
         // Désactivation du menu principal
         mainMenu.setVisible(false);
 
@@ -66,6 +87,8 @@ public class MainMenuController implements Initializable {
      */
     @FXML
     private void QuitButton() {
+        ButtonClicked();
+
         Platform.exit();
     }
 
@@ -74,6 +97,8 @@ public class MainMenuController implements Initializable {
      */
     @FXML
     private void HostButton() throws IOException {
+        ButtonClicked();
+
         GameApplication.getInstance().ConfigureNetwork(NetworkIdentity.SERVER);
     }
 
@@ -82,6 +107,8 @@ public class MainMenuController implements Initializable {
      */
     @FXML
     private void JoinButton() throws IOException {
+        ButtonClicked();
+
         // Récupération et sauvegarde de la valeur de l'InputField sur le GameApplication
         GameApplication.getInstance().ip = ipField.getText();
 
@@ -93,6 +120,19 @@ public class MainMenuController implements Initializable {
      */
     @FXML
     private void ReturnButton() {
+        ButtonClicked();
         SetupMenu();
+    }
+
+    /**
+     * Fonction appelée quand on clique sur un bouton pour lancer un son
+     */
+    private void ButtonClicked() {
+        if (mediaPlayer.getStatus() == MediaPlayer.Status.PLAYING) {
+            mediaPlayer.stop();
+        }
+        // Remettre le son au début et le jouer
+        mediaPlayer.seek(Duration.ZERO);
+        mediaPlayer.play();
     }
 }

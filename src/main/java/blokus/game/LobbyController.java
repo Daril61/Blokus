@@ -23,23 +23,47 @@ import java.util.ResourceBundle;
  */
 public class LobbyController implements Initializable {
 
+    /**
+     * Variable qui contient le chaque élément pour le joueur 1
+     */
     @FXML
     private Group groupJ1;
+    /**
+     * Variable qui contient le status de connexion du joueur 1
+     */
     @FXML
     private Text networkInfoJ1;
 
+    /**
+     * Variable qui contient le chaque élément pour le joueur 2
+     */
     @FXML
     private Group groupJ2;
+    /**
+     * Variable qui contient le status de connexion du joueur 2
+     */
     @FXML
     private Text networkInfoJ2;
 
+    /**
+     * Variable qui contient le chaque élément pour le joueur 3
+     */
     @FXML
     private Group groupJ3;
+    /**
+     * Variable qui contient le status de connexion du joueur 3
+     */
     @FXML
     private Text networkInfoJ3;
 
+    /**
+     * Variable qui contient le chaque élément pour le joueur 4
+     */
     @FXML
     private Group groupJ4;
+    /**
+     * Variable qui contient le status de connexion du joueur 4
+     */
     @FXML
     private Text networkInfoJ4;
 

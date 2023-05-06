@@ -41,44 +41,102 @@ import java.util.*;
  */
 public class GameSceneController implements Initializable {
 
-    private static final int FRAME_DURATION = 50;
-
+    /**
+     * La position actuelle du joueur dans la grille.
+     */
     private Vector2 position;
+
+    /**
+     * La forme actuellement sélectionnée par le joueur.
+     */
     Shape currentSelectedShape;
 
+    /**
+     * Le conteneur racine de l'interface utilisateur.
+     */
     @FXML
     private Pane root;
+
+    /**
+     * Le conteneur de la grille de jeu.
+     */
     @FXML
     private GridPane grid;
+
+    /**
+     * Le conteneur parent des formes de jeu disponibles.
+     */
     @FXML
     private FlowPane shapesParent;
 
+    /**
+     * Le label affichant le nom du joueur situé à gauche de l'écran.
+     */
     @FXML
     private Label leftPlayerName;
+    /**
+     * Le label affichant le nombre de pièces restantes du joueur situé à gauche de l'écran.
+     */
     @FXML
     private Label leftNbPiece;
 
+    /**
+     * Le label affichant le nom du joueur situé en bas de l'écran.
+     */
     @FXML
     private Label frontPlayerName;
+    /**
+     * Le label affichant le nombre de pièces restantes du joueur situé en bas de l'écran.
+     */
     @FXML
     private Label frontNbPiece;
 
+    /**
+     * Le label affichant le nom du joueur situé à droite de l'écran.
+     */
     @FXML
     private Label rightPlayerName;
+    /**
+     * Le label affichant le nombre de pièces restantes du joueur situé à droite de l'écran.
+     */
     @FXML
     private Label rightNbPiece;
 
+    /**
+     * Le label affichant le temps restant pour le tour du joueur actuel.
+     */
     @FXML
     private Label playerTimer;
+    /**
+     * Le minuteur utilisé pour compter le temps restant.
+     */
     private Timer timer;
 
+    /**
+     * Couleur du joueur
+     */
     private GameColor pColor;
 
+    /**
+     * Grille qui contient les pixels du jeu
+     */
     private final int[][] boardGrid = new int[20][20];
+    /**
+     * Dictionnaire qui relie un identifiant à un texte
+     */
     private final Map<Integer, Label> playersIdToNbShapeText = new HashMap<>();
+    /**
+     * Dictionnaire qui relie un type de forme à un groupe de pixel
+     */
     private final Map<ShapeType, Group> shapesTypeToGroup = new HashMap<>();
 
+    /**
+     * Variable pour savoir si c'est le premier placement
+     */
     private boolean firstPlace = true;
+    /**
+     * Liste des pixels que l'on prévisualise
+     */
     private List<Pixel> pixelPreviewed = new ArrayList<>();
 
     /**

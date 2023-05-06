@@ -26,42 +26,119 @@ import java.util.List;
  */
 public class GameApplication extends Application {
 
+    /**
+     * Instance de l'application.
+     */
     private static GameApplication instance;
+    /**
+     * Méthode permettant d'obtenir l'instance de l'application.
+     *
+     * @return l'instance de l'application
+     */
     public static GameApplication getInstance() {
         return instance;
     }
 
+    /**
+     * Fenêtre principale de l'application.
+     */
     private Stage stage;
+    /**
+     * Méthode permettant d'obtenir la fenêtre principale de l'application.
+     *
+     * @return la fenêtre principale de l'application
+     */
     public Stage getStage() {
         return stage;
     }
+
+    /**
+     * Booléen indiquant si le jeu a commencé.
+     */
     private boolean gameStart;
 
+    /**
+     * Identité du joueur sur le réseau.
+     */
     private NetworkIdentity identity;
+    /**
+     * Méthode permettant d'obtenir l'identité du joueur sur le réseau.
+     *
+     * @return l'identité du joueur sur le réseau
+     */
     public NetworkIdentity getIdentity() {
         return identity;
     }
 
+    /**
+     * Identifiant du joueur.
+     */
     public int pId;
-
+    /**
+     * Adresse IP utilisée par le joueur.
+     */
     public String ip;
+
+    /**
+     * Booléen indiquant si c'est au tour du joueur.
+     */
     public boolean myTurn = false;
 
+    /**
+     * Liste des connexions au réseau.
+     */
     private final List<Socket> connections = new ArrayList<>();
+    /**
+     * Liste des flux de sortie des connexions au réseau.
+     */
     private final List<ObjectOutputStream> outputStreams = new ArrayList<>();
+    /**
+     * Liste des structures des joueurs.
+     */
     public List<PlayerStruct> playerStructs = new ArrayList<>();
+    /**
+     * Liste des lecteurs des connexions au réseau.
+     */
     private final List<Reader> readers = new ArrayList<>();
+    /**
+     * Liste des ordres de passage des joueurs.
+     */
     private final List<ObjectOutputStream> pOrder = new ArrayList<>();
+
+    /**
+     * Identifiant de l'ordre de passage des joueurs.
+     */
     private int idOrder = 0;
+
+    /**
+     * Méthode permettant d'obtenir le nombre de joueurs connectés au réseau.
+     *
+     * @return le nombre de joueurs connectés au réseau
+     */
     public int getNumberOfPlayers() {
         return connections.size();
     }
 
+    /**
+     * Événement déclenché lors d'une mise à jour des joueurs.
+     */
     public Event OnPlayersUpdateEvent;
+    /**
+     * Événement déclenché lorsqu'une forme est placée.
+     */
     public Event OnShapePlacedEvent;
+    /**
+     * Événement déclenché lorsque c'est au tour du joueur.
+     */
     public Event WhenMyTurn;
+    /**
+     * Événement déclenché lors de la réception du classement du jeu.
+     */
     public Event OnGameRankReceivedEvent;
 
+    /**
+     * Socket du serveur réseau.
+     */
     private ServerSocket serverSocket;
 
     /**
@@ -315,6 +392,10 @@ public class GameApplication extends Application {
         }
         SendMessage(new TurnMessage(), pOrder.get(idOrder));
     }
+    /**
+     * Fonction pour retirer un joueur de la liste quand il abandonne
+     * @param pId Identifiant du joueur
+     */
     public void RemoveTurnPlayer(int pId) {
         // Si c'est le serveur
         if(pId == -1) {
@@ -337,10 +418,10 @@ public class GameApplication extends Application {
                 SendMessage(new GameRankMessage(new GameRankArgs(1)), o);
 
                 GameRankArgs args = new GameRankArgs(0);
-                for (int i = 0; i < outputStreams.size(); i++) {
-                    if(outputStreams.get(i) == o) continue;
+                for (ObjectOutputStream outputStream : outputStreams) {
+                    if (outputStream == o) continue;
 
-                    SendMessage(new GameRankMessage(args), outputStreams.get(i));
+                    SendMessage(new GameRankMessage(args), outputStream);
                 }
 
                 OnGameRankReceivedEvent.broadcast(args);
