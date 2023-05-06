@@ -1,0 +1,1 @@
+moduleSearchIndex = [{"l":"blokus.blokus"}];updateSearchResults();

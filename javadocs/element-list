@@ -1,0 +1,5 @@
+module:blokus.blokus
+blokus.game
+blokus.utils
+blokus.utils.eventArgs
+blokus.utils.message

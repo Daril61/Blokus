@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"m":"blokus.blokus","l":"blokus.game"},{"m":"blokus.blokus","l":"blokus.utils"},{"m":"blokus.blokus","l":"blokus.utils.eventArgs"},{"m":"blokus.blokus","l":"blokus.utils.message"}];updateSearchResults();
